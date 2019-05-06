@@ -47,11 +47,16 @@
 #include <vector>
 #include "PCCMath.h"
 #include "PCCMisc.h"
+#include <thread>
 
 namespace pcc {
 #define PI (3.1415926)
 #define EPS (1e-15)
 #define INF (100000000000000000)
+
+
+	void QuickSort(std::vector<PCCPoint3D> &positions, std::vector<PCCColor3B>&colors, int l, int r);
+	void ThreadSort(std::vector<PCCPoint3D> &positions, std::vector<PCCColor3B>&colors, int ThreadCount);
 
 	class PCCPointSet3 {
 	 public:
@@ -766,12 +771,27 @@ namespace pcc {
 		  box3D = pbox3D;
 		  stepSize = pstepSize;
 	  }
-	  void sort()
+
+	  
+
+	  void InsertSort()
 	  {
+		  std::vector<bool> a(10, true);
 		  for (size_t i = 0; i < positions.size(); i++)
 		  {
+			  if (i / double(positions.size()) >= 0.1&&a[0]) { printf("排序完成10%......\n"); a[0] = false; }
+			  if (i / double(positions.size()) >= 0.2&&a[1]) { printf("排序完成20%......\n"); a[1] = false; }
+			  if (i / double(positions.size()) >= 0.3&&a[2]) { printf("排序完成30%......\n"); a[2] = false; }
+			  if (i / double(positions.size()) >= 0.4&&a[3]) { printf("排序完成40%......\n"); a[3] = false; }
+			  if (i / double(positions.size()) >= 0.5&&a[4]) { printf("排序完成50%......\n"); a[4] = false; }
+			  if (i / double(positions.size()) >= 0.6&&a[5]) { printf("排序完成60%......\n"); a[5] = false; }
+			  if (i / double(positions.size()) >= 0.7&&a[6]) { printf("排序完成70%......\n"); a[6] = false; }
+			  if (i / double(positions.size()) >= 0.8&&a[7]) { printf("排序完成80%......\n"); a[7] = false; }
+			  if (i / double(positions.size()) >= 0.9&&a[8]) { printf("排序完成90%......\n"); a[8] = false; }
+			  if (i / double(positions.size()) >= 0.99&&a[9]) { printf("排序完成100%......\n"); a[9] = false; }
+
 			  size_t min = i;
-			  for (size_t j = i+1; j < positions.size(); j++)
+			  for (size_t j = i + 1; j < positions.size(); j++)
 			  {
 				  if (positions[j] < positions[min]) min = j;
 			  }
@@ -792,9 +812,12 @@ namespace pcc {
 			  }
 		  }
 	  }
+
+	 
+
 	  void RemoveRepeatePoints()
-	  {
-		  sort();  
+	  {  
+		  ThreadSort(positions, colors, 8);
 		  size_t i = 0, j = 0, k;
 		  for (k = 1; k < positions.size(); k++)
 		  {
@@ -828,7 +851,7 @@ namespace pcc {
 		  resize(i);
 	  }
 
-	 private:
+	 public:
 	  std::vector<PCCPoint3D> positions;
 	  std::vector<PCCColor3B> colors;
 	  std::vector<uint16_t> reflectances;
@@ -840,6 +863,60 @@ namespace pcc {
 	  double stepSize; //步长
 
 	};
+
+	void QuickSort(std::vector<PCCPoint3D> &positions, std::vector<PCCColor3B>&colors, int l, int r) {
+
+		if (l < r) {
+			int i = l, j = r;
+			PCCPoint3D temp = positions[l];
+			PCCColor3B tempColor = colors[l];
+			while (i < j) {
+				while (i < j && (temp < positions[j] || temp == positions[j]))
+					--j;
+				if (i < j)
+				{
+					positions[i++] = positions[j];
+					colors[i++] = colors[j];
+				}
+
+
+				while (i<j&&temp>positions[i])
+					++i;
+				if (i < j)
+				{
+					positions[j--] = positions[i];
+					colors[j--] = colors[i];
+				}
+
+			}
+			positions[i] = temp;
+			colors[i] = tempColor;
+
+			QuickSort(positions, colors, l, i - 1);
+			QuickSort(positions, colors, i + 1, r);
+		}
+	}
+
+	void ThreadSort(std::vector<PCCPoint3D> &positions, std::vector<PCCColor3B>&colors, int ThreadCount)
+	{
+		size_t partionSize = positions.size() / ThreadCount;
+		std::vector<std::thread> threadEncoderList;
+		for (int count = 0; count < ThreadCount; ++count) {
+			if (count != (ThreadCount - 1))
+			{
+				threadEncoderList.push_back(std::thread(QuickSort, positions, colors, count*partionSize, (count + 1)*partionSize - 1));
+			}
+			else
+			{
+				threadEncoderList.push_back(std::thread(QuickSort, positions, colors, count*partionSize, positions.size() - 1));
+			}
+		}
+		std::for_each(threadEncoderList.begin(), threadEncoderList.end(), std::mem_fn(&std::thread::join));
+	}
 }
+
+
+
+
 
 #endif /* PCCPointSet_h */

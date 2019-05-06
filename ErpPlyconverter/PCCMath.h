@@ -186,6 +186,7 @@ class PCCVector3 {
     }
     return (data[0] < rhs.data[0]);
   }
+
   bool operator>(const PCCVector3 &rhs) const {
     if (data[0] == rhs.data[0]) {
       if (data[1] == rhs.data[1]) {
