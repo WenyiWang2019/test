@@ -213,6 +213,19 @@ namespace erp
 						viewNames.push_back(tokens[8]);
 						widths.push_back(atoi(tokens[9].c_str()));
 						heights.push_back(atoi(tokens[10].c_str()));
+						if (tokens[11] == "420")
+						{
+							textureYUVFormats.push_back(YUV420);
+							depthYUVFormats.push_back(YUV420);
+						}
+						else
+						{
+							std::cout << "Unknown YUV format!" << std::endl;
+						}
+						depthbitDepths.push_back(atoi(tokens[12].c_str()));
+						texturebitDepths.push_back(atoi(tokens[12].c_str()));
+						Rnears.push_back(atoi(tokens[13].c_str()));
+						Rfars.push_back(atoi(tokens[14].c_str()));
 					}
 					else
 					{
