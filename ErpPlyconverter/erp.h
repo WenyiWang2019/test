@@ -192,7 +192,7 @@ namespace erp
 				std::cout << "Error: non-supported version!" << std::endl;
 				return false;
 			}
-			assert(mode == 0 && attributeCount == 8 || mode == 1 && attributeCount == 6);
+			assert(mode == 0 && attributeCount == 15 || mode == 1 && attributeCount == 6);
 			if (isAscii) {
 				size_t viewCounter = 0;
 				while (!ifs.eof() && viewCounter < viewNumber) {
@@ -204,23 +204,15 @@ namespace erp
 					if (tokens.size() < attributeCount) {
 						return false;
 					}
-					if (attributeCount == 8)
+					if (attributeCount == 15)
 					{
 						depthFileNames.push_back(tokens[0]);
 						textureFileNames.push_back(tokens[1]);
 						T.push_back(pcc::PCCVector3D(atof(tokens[2].c_str()), atof(tokens[3].c_str()), atof(tokens[4].c_str())));
 						R.push_back(pcc::PCCVector3D(atof(tokens[5].c_str()), atof(tokens[6].c_str()), atof(tokens[7].c_str())));
-						//check
-						std::ifstream ifs(tokens[0], std::ifstream::in);
-						if (!ifs.is_open()) {
-							std::cout << "Can not open \"depth file:" << tokens[0] << "\"!" << std::endl;
-							exit(1);
-						}
-						std::ifstream ifs1(tokens[1], std::ifstream::in);
-						if (!ifs1.is_open()) {
-							std::cout << "Can not open \"texture file:" <<tokens[1] << "\"!" << std::endl;
-							exit(1);
-						}
+						viewNames.push_back(tokens[8]);
+						widths.push_back(atoi(tokens[9].c_str()));
+						heights.push_back(atoi(tokens[10].c_str()));
 					}
 					else
 					{
