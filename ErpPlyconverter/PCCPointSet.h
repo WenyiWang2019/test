@@ -704,6 +704,49 @@ namespace pcc {
 			  positions[i] = positions[i]+T;
 		  }
 	  }
+	  
+	  void ToPolarCoordinates(uint8_t xBitDepth, uint8_t yBitDepth,uint8_t zBitDepth, double Rnear, double Rfar)
+	  {
+		  //W->X H->Y depth->Z
+		  uint16_t W = 1 << xBitDepth;
+		  uint16_t H = 1 << yBitDepth;
+		  long vmax = (1 << zBitDepth) - 1;
+
+		  double phi, theta;
+		  uint16_t n, m, z;
+		  const size_t pointCount = getPointCount();
+		  for (int i = 0; i < pointCount; i++)
+		  {
+			  PCCPoint3D &position = getPosition(i);
+	
+			  double R = sqrt(position.x() * position.x() + position.y() * position.y() + position.z() * position.z());
+
+			  phi = -sign(position.y())*acos(position.x() / sqrt(position.x() * position.x() + position.y() * position.y()));
+			  theta = asin(position.z() / R);
+
+			  if (W == H)
+			  {
+				  n = floor((phi / PI + 0.5)*W - 0.5 + 0.5);
+				  n = n >= W ? 0 : n;
+				  n = n < 0 ? W - 1 : n;
+				  m = floor((0.5 - theta / PI)*H - 0.5 + 0.5);
+				  m = m >= H ? 0 : m;
+				  m = m < 0 ? H - 1 : m;
+			  }
+			  else
+			  {
+				  n = floor((phi / (2 * PI) + 0.5)*W - 0.5 + 0.5);
+				  n = n >= W ? 0 : n;
+				  n = n < 0 ? W - 1 : n;
+				  m = floor((0.5 - theta / PI)*H - 0.5 + 0.5);
+				  m = m >= H ? 0 : m;
+				  m = m < 0 ? H - 1 : m;
+			  }
+		
+			  z= floor(vmax * (1 / R - 1 / Rfar) / (1 / Rnear - 1 / Rfar) + 0.5);
+			  position = PCCPoint3D(n, m, z);
+		  }
+	  }
 
 	  std::vector<PCCPoint3D> &getPositions() { return positions; }
 	  std::vector<PCCColor3B> &getColors() { return colors; }
@@ -723,11 +766,6 @@ namespace pcc {
 	  {
 
 	  }
-
-	  /*void DescartesToPolar(PCCVector3<double> R, PCCVector3<double> T)
-	  {
-
-	  }*/
 
 	 private:
 	  std::vector<PCCPoint3D> positions;
