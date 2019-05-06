@@ -705,6 +705,11 @@ namespace pcc {
 		  }
 	  }
 	  
+	  int sign(double Z)
+	  {
+		  return (Z > 0 ? 1 : -1);
+	  }
+
 	  void ToPolarCoordinates(uint8_t xBitDepth, uint8_t yBitDepth,uint8_t zBitDepth, double Rnear, double Rfar)
 	  {
 		  //W->X H->Y depth->Z
@@ -761,10 +766,66 @@ namespace pcc {
 		  box3D = pbox3D;
 		  stepSize = pstepSize;
 	  }
-	 
+	  void sort()
+	  {
+		  for (size_t i = 0; i < positions.size(); i++)
+		  {
+			  size_t min = i;
+			  for (size_t j = i+1; j < positions.size(); j++)
+			  {
+				  if (positions[j] < positions[min]) min = j;
+			  }
+			  PCCPoint3D temp = positions[i];
+			  positions[i] = positions[min];
+			  positions[min] = positions[i];
+			  if (withColors)
+			  {
+				  PCCColor3B tempColor = colors[i];
+				  colors[i] = colors[min];
+				  colors[min] = tempColor;
+			  }
+			  if (withReflectances)
+			  {
+				  uint16_t tempReflectance = reflectances[i];
+				  reflectances[i] = reflectances[min];
+				  reflectances[min] = tempReflectance;
+			  }
+		  }
+	  }
 	  void RemoveRepeatePoints()
 	  {
-
+		  sort();  
+		  size_t i = 0, j = 0, k;
+		  for (k = 1; k < positions.size(); k++)
+		  {
+			  if (positions[k] == positions[j]) continue;
+			  PCCPoint3D tempPosition = positions[j];
+			  PCCColor3B tempColor(0, 0, 0);
+			  for (size_t m = j; m < k; m++)
+			  {
+				  tempColor += colors[m];
+			  }
+			  tempColor /= (k - j);
+			  positions[i] = tempPosition;
+			  colors[i] = tempColor;
+			  i++;
+			  j = k;
+			  k++;
+		  }
+		  if (j < positions.size())
+		  {
+			  PCCPoint3D tempPosition = positions[j];
+			  PCCColor3B tempColor(0, 0, 0);
+			  for (size_t m = j; m < k; m++)
+			  {
+				  tempColor += colors[m];
+			  }
+			  tempColor /= (k - j);
+			  positions[i] = tempPosition;
+			  colors[i] = tempColor;
+			  i++;
+		  } 
+		  resize(i);
 	  }
 
 	 private:

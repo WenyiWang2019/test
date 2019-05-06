@@ -66,7 +66,7 @@ namespace erp
 
 		size_t viewNumber;//视点数量，由ERP配置文件解析得到（解析参数）
 		std::vector<std::string> depthFileNames; //各个视点深度文件名，由ERP配置文件解析得到（解析参数）
-		std::vector<std::string> textureFileNames; //各个视点材质文件名，由ERP配置文件解析得到（解析参数）
+		std::vector<std::string> textureFileNames; //各个视点纹理文件名，由ERP配置文件解析得到（解析参数）
 		
 
 
@@ -83,7 +83,7 @@ namespace erp
 		std::vector<std::string> viewNames;
 		std::vector<uint16_t> widths;
 		std::vector<uint16_t> heights;
-		//材质图信息
+		//纹理图信息
 		std::vector<uint16_t> texturebitDepths;
 		std::vector<YUVformat> textureYUVFormats;
 		//深度图信息
@@ -591,7 +591,7 @@ namespace erp
 		std::string viewName;
 		uint16_t width;
 		uint16_t height;
-		//材质图信息
+		//纹理图信息
 		uint16_t texturebitDepth;
 		YUVformat textureYUVFormat;
 		//深度图信息
@@ -625,7 +625,7 @@ namespace erp
 			viewName = pviewName;
 			width = pwidth;
 			height = pheight;
-			//材质图信息
+			//纹理图信息
 			texturebitDepth = ptexturebitDepth;
 			textureYUVFormat = ptextureYUVFormat;
 			//深度图信息
@@ -639,15 +639,8 @@ namespace erp
 			if (depth) delete depth;
 			texture = new YUV(width, height, texturebitDepth, textureYUVFormat);
 			depth = new YUV(width, height, depthbitDepth, depthYUVFormat);
-			if (depthbitDepth == 10)
-			{
-				vmax = 1023;
-			}
-			if (depthbitDepth == 8)
-			{
-				vmax = 255;
-			}
-			else printf("bitDepth=%d  unknown bitDepth!\n", vmax);
+			vmax = 1 << depthbitDepth - 1;
+	
 		}
 		CErpFrame(std::string pviewName, uint16_t pwidth, uint16_t pheight, double pRnear, double pRfar, YUVformat pdepthYUVFormat, uint8_t pdepthbitDepth,
 			YUVformat ptextureYUVFormat, uint8_t ptexturebitDepth, pcc::PCCVector3<double> pT, pcc::PCCVector3<double> pR,double pdeltaX,double pdeltaY,
@@ -656,7 +649,7 @@ namespace erp
 			viewName = pviewName;
 			width = pwidth;
 			height = pheight;
-			//材质图信息
+			//纹理图信息
 			texturebitDepth = ptexturebitDepth;
 			textureYUVFormat = ptextureYUVFormat;
 			//深度图信息
@@ -731,69 +724,6 @@ namespace erp
 		{
 			assert(texture&&depth&&textureYUVFormat == YUV444);
 			texture->YUV444To420();
-		}
-		void ParseDepthAndTextureFileName(std::string textureFileName, std::string depthFileName)
-		{
-
-			std::vector<std::string> depthFilePathSplit = splitWithStl(depthFileName, "\\");
-			depthFilePathSplit = splitWithStl(depthFilePathSplit.back(), "_");
-			assert(depthFilePathSplit.size() == 8);
-			viewName = depthFilePathSplit[0];
-			std::vector<std::string> depthFilePathSplit1Split = splitWithStl(depthFilePathSplit[1], "x");
-			assert(depthFilePathSplit1Split.size() == 2);
-			width = atoi(depthFilePathSplit1Split[0].c_str());
-			height = atoi(depthFilePathSplit1Split[1].c_str());
-
-			Rnear = atof((depthFilePathSplit[2] + "." + depthFilePathSplit[3]).c_str());
-			Rfar = atof((depthFilePathSplit[4] + "." + depthFilePathSplit[5]).c_str());
-			if (depthFilePathSplit[6] == "420") depthYUVFormat = YUV420;
-			else if (depthFilePathSplit[6] == "444") depthYUVFormat = YUV444;
-			else
-			{
-				std::cout << "Can not handle such format YUV File for now!" << std::endl;
-				exit(1);
-			}
-
-			std::vector<std::string> depthFilePathSplit7Split = splitWithStl(depthFilePathSplit[7], "b");
-			assert(depthFilePathSplit7Split.size() == 2);
-			depthbitDepth = atoi(depthFilePathSplit7Split[0].c_str());
-
-			if (depthbitDepth == 10)
-			{
-				vmax = 1023;
-			}
-			else printf("bitDepth=%d  unknown bitDepth!\n", vmax);
-
-
-			std::vector<std::string> textureFilePathSplit = splitWithStl(textureFileName, "\\");
-			textureFilePathSplit = splitWithStl(textureFilePathSplit.back(), "_");
-			assert(textureFilePathSplit.size() == 4);
-			if (viewName != textureFilePathSplit[0])
-			{
-				std::cout << "textureFile:" << textureFileName << std::endl;
-				std::cout << "depthFile:" << depthFileName << std::endl;
-				std::cout << "texture file and depth file do not match!" << std::endl;
-			}
-			std::vector<std::string> textureFilePathSplit1Split = splitWithStl(textureFilePathSplit[1], "x");
-			assert(textureFilePathSplit1Split.size() == 2);
-			if (width != atoi(textureFilePathSplit1Split[0].c_str()) || height != atoi(textureFilePathSplit1Split[1].c_str()))
-			{
-				std::cout << "textureFile:" << textureFileName << std::endl;
-				std::cout << "depthFile:" << depthFileName << std::endl;
-				std::cout << "texture file and depth file do not match!" << std::endl;
-			}
-			if (textureFilePathSplit[2] == "420") textureYUVFormat = YUV420;
-			else if (textureFilePathSplit[2] == "444") textureYUVFormat = YUV444;
-			else
-			{
-				std::cout << "Can not handle such format YUV File for now!" << std::endl;
-				exit(1);
-			}
-
-			std::vector<std::string> textureFilePathSplit3Split = splitWithStl(textureFilePathSplit[3], "b");
-			assert(textureFilePathSplit3Split.size() == 2);
-			texturebitDepth = atoi(textureFilePathSplit3Split[0].c_str());
-			return;
 		}
 		void read(std::string textureFileName, std::string depthFileName, size_t frameCounter)
 		{
