@@ -488,7 +488,6 @@ namespace erp
 		{
 			// -mode 0 -frameNumber 1 -pointCloudGeoBitDepth 16 -outputPlyPath PLY -inputErpCfgPath cfg\hijack-part.cfg
 			// -mode 1 -inputPointCloudCfgPath cfg\PointCloud-all.cfg -outputRecYUVPath YUVrec
-			// -mode 2 -frameNumber 1 -pointCloudGeoBitDepth 16 -outputPlyPath PLY -inputErpCfgPath cfg\hijack-part.cfg
 			for (int iArgIdx = 1; iArgIdx < argc; iArgIdx += 2)
 			{
 				if (strcmp("-help", argv[iArgIdx]) == 0) { PrintHelp(); exit(1); }
@@ -502,31 +501,9 @@ namespace erp
 				else if (strcmp("-inputPlaneCfgPath", argv[iArgIdx]) == 0) inputPlaneCfgPath = argv[iArgIdx + 1];
 			}
 
-			if (mode == 0)
-			{
-				ParseErpCfgFile();
-
-			}
-			else if (mode == 1)
-			{
-				ParsePointCloudCfgFile();
-			}
-			else if (mode == 2)
-			{
-				ParsePlaneCfgFile();
-			}
-			else if (mode == 3)
-			{
-				ParsePlaneCfgFile();
-			}
-			else if (mode == 4)
-			{
-				ParseErpCfgFile();
-			}
-			else
-			{
-				exit(1);
-			}
+			if (mode == 0) ParseErpCfgFile();
+			else if (mode == 1)	ParsePointCloudCfgFile();
+			else exit(1);
 		}
 		void PrintParas()
 		{
