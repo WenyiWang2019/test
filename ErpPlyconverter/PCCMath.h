@@ -566,7 +566,7 @@ void PCCDiagonalize(const PCCMatrix3<double> &A, PCCMatrix3<double> &Q, PCCMatri
 typedef PCCVector3<double> PCCVector3D;
 typedef PCCVector3<double> PCCPoint3D;
 typedef PCCBox3<double> PCCBox3D;
-typedef PCCVector3<uint16_t> PCCColor3B;
+typedef PCCVector3<uint32_t> PCCColor3B;
 typedef PCCMatrix3<double> PCCMatrix3D;
 
 template <typename T>

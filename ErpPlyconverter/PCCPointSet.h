@@ -54,10 +54,6 @@ namespace pcc {
 #define EPS (1e-15)
 #define INF (100000000000000000)
 
-
-	void QuickSort(std::vector<PCCPoint3D> &positions, std::vector<PCCColor3B>&colors, int l, int r);
-	void ThreadSort(std::vector<PCCPoint3D> &positions, std::vector<PCCColor3B>&colors, int ThreadCount);
-
 	class PCCPointSet3 {
 	 public:
 	  PCCPointSet3() {
@@ -772,7 +768,38 @@ namespace pcc {
 		  stepSize = pstepSize;
 	  }
 
-	  
+	  void QuickSort(int l, int r) {
+
+		  if (l < r) {
+			  int i = l, j = r;
+			  PCCPoint3D temp = positions[l];
+			  PCCColor3B tempColor = colors[l];
+			  while (i < j) {
+				  while (i < j&&(temp < positions[j]|| temp == positions[j]))
+					  --j;
+				  if (i < j)
+				  {
+					  positions[i++] = positions[j];
+					  colors[i++] = colors[j];
+				  }
+					  
+
+				  while (i<j&&temp>positions[i])
+					  ++i;
+				  if (i < j)
+				  {
+					  positions[j--] = positions[i];
+					  colors[j--] = colors[i];
+				  }
+				 
+			  }
+			  positions[i] = temp;
+			  colors[i] = tempColor;
+
+			  QuickSort(l, i - 1);
+			  QuickSort(i + 1, r);
+		  }
+	  }
 
 	  void InsertSort()
 	  {
@@ -813,11 +840,73 @@ namespace pcc {
 		  }
 	  }
 
-	 
 
+	  void max_heapify(size_t start, size_t end)
+	  {
+		  //建立父节点下标和子节点下标
+		  size_t dad = start;
+
+		  size_t son = dad * 2 + 1;
+
+		  while (son <= end)
+		  {   //若子节点下标在范围内才做比较
+			  if (son + 1 <= end && positions[son] < positions[son + 1]) //先比较两个子节点大小，选择最大的
+			  {
+				  son++;
+
+			  }
+
+			  if (positions[dad] > positions[son]) //如果父节点大于子节点代表调整完毕,直接跳出
+			  {
+				  return;
+			  }
+			  else
+			  {   //否则交换父子节点的值再继续左右子节点值得比较
+				  swapPoints(dad, son);
+				  dad = son;
+				  son = dad * 2 + 1;
+			  }
+
+		  }
+	  }
+
+	  void heap_sort()
+	  {
+		  //初始化，i从最后一个父节点开始调整
+		  for (size_t i = positions.size() / 2 - 1; i >= 0; i--)
+		  {
+			  max_heapify(i, positions.size() - 1);
+
+		  }
+		  printf("创建堆完成......\n");
+
+		  std::vector<bool> a(10, true);
+
+		  for (size_t i = positions.size() - 1; i > 0; i--)
+		  {
+			  swapPoints(0, i);
+
+			  max_heapify(0, i - 1);
+
+			  if (i / double(positions.size()) >= 0.1&&a[0]) { printf("排序完成10%......\n"); a[0] = false; }
+			  if (i / double(positions.size()) >= 0.2&&a[1]) { printf("排序完成20%......\n"); a[1] = false; }
+			  if (i / double(positions.size()) >= 0.3&&a[2]) { printf("排序完成30%......\n"); a[2] = false; }
+			  if (i / double(positions.size()) >= 0.4&&a[3]) { printf("排序完成40%......\n"); a[3] = false; }
+			  if (i / double(positions.size()) >= 0.5&&a[4]) { printf("排序完成50%......\n"); a[4] = false; }
+			  if (i / double(positions.size()) >= 0.6&&a[5]) { printf("排序完成60%......\n"); a[5] = false; }
+			  if (i / double(positions.size()) >= 0.7&&a[6]) { printf("排序完成70%......\n"); a[6] = false; }
+			  if (i / double(positions.size()) >= 0.8&&a[7]) { printf("排序完成80%......\n"); a[7] = false; }
+			  if (i / double(positions.size()) >= 0.9&&a[8]) { printf("排序完成90%......\n"); a[8] = false; }
+			  if (i / double(positions.size()) >= 0.99&&a[9]) { printf("排序完成100%......\n"); a[9] = false; }
+		  }
+	  }
+	  
+	  void sort()
+	  {
+		  heap_sort();
+	  }
 	  void RemoveRepeatePoints()
-	  {  
-		  ThreadSort(positions, colors, 8);
+	  {
 		  size_t i = 0, j = 0, k;
 		  for (k = 1; k < positions.size(); k++)
 		  {
@@ -833,25 +922,23 @@ namespace pcc {
 			  colors[i] = tempColor;
 			  i++;
 			  j = k;
-			  k++;
 		  }
-		  if (j < positions.size())
+
+		  PCCPoint3D tempPosition = positions[j];
+		  PCCColor3B tempColor(0, 0, 0);
+		  for (size_t m = j; m < k; m++)
 		  {
-			  PCCPoint3D tempPosition = positions[j];
-			  PCCColor3B tempColor(0, 0, 0);
-			  for (size_t m = j; m < k; m++)
-			  {
-				  tempColor += colors[m];
-			  }
-			  tempColor /= (k - j);
-			  positions[i] = tempPosition;
-			  colors[i] = tempColor;
-			  i++;
-		  } 
+			  tempColor += colors[m];
+		  }
+		  tempColor /= (k - j);
+		  positions[i] = tempPosition;
+		  colors[i] = tempColor;
+		  i++;
+	
 		  resize(i);
 	  }
 
-	 public:
+	 private:
 	  std::vector<PCCPoint3D> positions;
 	  std::vector<PCCColor3B> colors;
 	  std::vector<uint16_t> reflectances;
@@ -863,60 +950,6 @@ namespace pcc {
 	  double stepSize; //步长
 
 	};
-
-	void QuickSort(std::vector<PCCPoint3D> &positions, std::vector<PCCColor3B>&colors, int l, int r) {
-
-		if (l < r) {
-			int i = l, j = r;
-			PCCPoint3D temp = positions[l];
-			PCCColor3B tempColor = colors[l];
-			while (i < j) {
-				while (i < j && (temp < positions[j] || temp == positions[j]))
-					--j;
-				if (i < j)
-				{
-					positions[i++] = positions[j];
-					colors[i++] = colors[j];
-				}
-
-
-				while (i<j&&temp>positions[i])
-					++i;
-				if (i < j)
-				{
-					positions[j--] = positions[i];
-					colors[j--] = colors[i];
-				}
-
-			}
-			positions[i] = temp;
-			colors[i] = tempColor;
-
-			QuickSort(positions, colors, l, i - 1);
-			QuickSort(positions, colors, i + 1, r);
-		}
-	}
-
-	void ThreadSort(std::vector<PCCPoint3D> &positions, std::vector<PCCColor3B>&colors, int ThreadCount)
-	{
-		size_t partionSize = positions.size() / ThreadCount;
-		std::vector<std::thread> threadEncoderList;
-		for (int count = 0; count < ThreadCount; ++count) {
-			if (count != (ThreadCount - 1))
-			{
-				threadEncoderList.push_back(std::thread(QuickSort, positions, colors, count*partionSize, (count + 1)*partionSize - 1));
-			}
-			else
-			{
-				threadEncoderList.push_back(std::thread(QuickSort, positions, colors, count*partionSize, positions.size() - 1));
-			}
-		}
-		std::for_each(threadEncoderList.begin(), threadEncoderList.end(), std::mem_fn(&std::thread::join));
-	}
 }
-
-
-
-
 
 #endif /* PCCPointSet_h */

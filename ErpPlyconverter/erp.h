@@ -192,7 +192,7 @@ namespace erp
 				std::cout << "Error: non-supported version!" << std::endl;
 				return false;
 			}
-			assert(mode == 0 && attributeCount == 15 || mode == 1 && attributeCount == 6);
+			assert(mode == 0 && attributeCount == 16 || mode == 1 && attributeCount == 6);
 			if (isAscii) {
 				size_t viewCounter = 0;
 				while (!ifs.eof() && viewCounter < viewNumber) {
@@ -204,7 +204,7 @@ namespace erp
 					if (tokens.size() < attributeCount) {
 						return false;
 					}
-					if (attributeCount == 15)
+					if (attributeCount == 16)
 					{
 						depthFileNames.push_back(tokens[0]);
 						textureFileNames.push_back(tokens[1]);
@@ -223,9 +223,9 @@ namespace erp
 							std::cout << "Unknown YUV format!" << std::endl;
 						}
 						depthbitDepths.push_back(atoi(tokens[12].c_str()));
-						texturebitDepths.push_back(atoi(tokens[12].c_str()));
-						Rnears.push_back(atoi(tokens[13].c_str()));
-						Rfars.push_back(atoi(tokens[14].c_str()));
+						texturebitDepths.push_back(atoi(tokens[13].c_str()));
+						Rnears.push_back(atof(tokens[14].c_str()));
+						Rfars.push_back(atof(tokens[15].c_str()));
 					}
 					else
 					{
@@ -466,7 +466,7 @@ namespace erp
 		}
 		YUV(uint16_t pW, uint16_t pH, uint8_t pbitDepth, YUVformat pcs):W(pW),H(pH),bitDepth(pbitDepth),cs(pcs)
 		{
-			assert(bitDepth == 8 || bitDepth == 10);
+			assert(bitDepth <= 16);
 			uint16_t emptyVal= 1 << (bitDepth - 1);
 			Y = new std::vector< std::vector <uint16_t> >(H, std::vector <uint16_t>(W, emptyVal));
 			U = new std::vector< std::vector <uint16_t> >(H, std::vector <uint16_t>(W, emptyVal));
@@ -667,19 +667,7 @@ namespace erp
 			if (depth) delete depth;
 			texture = new YUV(width, height, texturebitDepth, textureYUVFormat);
 			depth = new YUV(width, height, depthbitDepth, depthYUVFormat);
-			if (depthbitDepth == 10)
-			{
-				vmax = 1023;
-			}
-			else if (depthbitDepth == 8)
-			{
-				vmax = 255;
-			}
-			else
-			{
-				printf("depthbitDepth=%d  unknown depthbitDepth!\n", depthbitDepth);
-				exit(0);
-			}
+			vmax = 1 << depthbitDepth - 1;
 		}
 		~CErpFrame()
 		{
