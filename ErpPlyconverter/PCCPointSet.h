@@ -98,24 +98,24 @@ namespace pcc {
 		return points[index].getPosition();
 	  }
 	  PCCPoint3D &operator[](const size_t index) {
-		assert(index < positions.size());
+		assert(index < points.size());
 		return points[index].getPosition();
 	  }
 
 	  void setPosition(const size_t index, const PCCPoint3D position) {
-		assert(index < positions.size());
+		assert(index < points.size());
 		points[index].getPosition() = position;
 	  }
 	  PCCColor3B getColor(const size_t index) const {
-		assert(index < colors.size() && withColors);
+		assert(index < points.size());
 		return points[index].getColor();
 	  }
 	  PCCColor3B &getColor(const size_t index) {
-		assert(index < colors.size() && withColors);
+		assert(index < points.size());
 		return points[index].getColor();
 	  }
 	  void setColor(const size_t index, const PCCColor3B color) {
-		assert(index < colors.size() && withColors);
+		assert(index < points.size());
 		points[index].getColor() = color;
 	  }
 	 
@@ -141,7 +141,7 @@ namespace pcc {
 		  points[index].getPosition() = position;
 	  }
 	  PCCPoint3D &getPosition(const size_t index) {
-		  assert(index < positions.size());
+		  assert(index < points.size());
 		  return points[index].getPosition();
 	  }
 	  void swapPoints(const size_t index1, const size_t index2) {
@@ -629,8 +629,7 @@ namespace pcc {
 			  position = PCCPoint3D(n, m, z);
 		  }
 	  }
- 
-	  
+ 	  
 	  void sort()
 	  {
 		  std::sort(points.begin(), points.end());
