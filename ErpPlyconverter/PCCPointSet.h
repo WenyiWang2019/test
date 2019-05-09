@@ -48,167 +48,106 @@
 #include "PCCMath.h"
 #include "PCCMisc.h"
 #include <thread>
+#include <algorithm>
 
 namespace pcc {
 #define PI (3.1415926)
 #define EPS (1e-15)
 #define INF (100000000000000000)
 
+	class PCCPoint
+	{
+	public:
+		PCCPoint() {}
+		~PCCPoint() = default;
+		PCCPoint3D getPosition() const
+		{
+			return position;
+		}
+		PCCColor3B getColor() const
+		{
+			return color;
+		}
+
+		bool operator<(const PCCPoint &rhs) const {
+			return (*this).position < rhs.position;
+		}
+
+		PCCPoint3D &getPosition()
+		{
+			return position;
+		}
+		PCCColor3B &getColor()
+		{
+			return color;
+		}
+	private:
+		PCCPoint3D position;
+		PCCColor3B color;
+	};
+
 	class PCCPointSet3 {
 	 public:
-	  PCCPointSet3() {
-		withColors = false;
-		withReflectances = false;
-		isPositionQuantized=false;
-	  }
-	  PCCPointSet3(bool IsPositionQuantized) {
-		  withColors = false;
-		  withReflectances = false;
-		  isPositionQuantized = IsPositionQuantized;
-	  }
+	  PCCPointSet3() {}
 	  PCCPointSet3(const PCCPointSet3 &) = default;
 	  PCCPointSet3 &operator=(const PCCPointSet3 &rhs) = default;
 	  ~PCCPointSet3() = default;
 		  
 	  PCCPoint3D operator[](const size_t index) const {
-		assert(index < positions.size());
-		return positions[index];
+		  assert(index < points.size());
+		return points[index].getPosition();
 	  }
 	  PCCPoint3D &operator[](const size_t index) {
 		assert(index < positions.size());
-		return positions[index];
+		return points[index].getPosition();
 	  }
-
-	  void Unique()
-	  {
-		  std::vector<PCCPoint3D>::iterator first = positions.begin();
-		  std::vector<PCCPoint3D>::iterator last = positions.end();
-		  std::vector<PCCColor3B>::iterator first_cor = colors.begin();
-		  std::vector<PCCColor3B>::iterator last_cor = colors.end();
-
-		  if (first == last) return ;
-
-		  std::vector<PCCPoint3D>::iterator result = first;
-		  std::vector<PCCColor3B>::iterator result_cor = first_cor;
-		  while (++first_cor,++first != last)
-		  {
-			  if (!(*result == *first))
-			  {
-				  *(++result) = *first;
-				  *(++result_cor) = *first_cor;
-			  }
-		  }
-
-		  positions.erase(++result,last);
-		  colors.erase(++result_cor, last_cor);
-
-		  return;
-	  }
-
-
 
 	  void setPosition(const size_t index, const PCCPoint3D position) {
 		assert(index < positions.size());
-		positions[index] = position;
+		points[index].getPosition() = position;
 	  }
 	  PCCColor3B getColor(const size_t index) const {
 		assert(index < colors.size() && withColors);
-		return colors[index];
+		return points[index].getColor();
 	  }
 	  PCCColor3B &getColor(const size_t index) {
 		assert(index < colors.size() && withColors);
-		return colors[index];
+		return points[index].getColor();
 	  }
 	  void setColor(const size_t index, const PCCColor3B color) {
 		assert(index < colors.size() && withColors);
-		colors[index] = color;
+		points[index].getColor() = color;
 	  }
-	  uint16_t getReflectance(const size_t index) const {
-		assert(index < reflectances.size() && withReflectances);
-		return reflectances[index];
-	  }
-	  uint16_t &getReflectance(const size_t index) {
-		assert(index < reflectances.size() && withReflectances);
-		return reflectances[index];
-	  }
-	  void setReflectance(const size_t index, const uint16_t reflectance) {
-		assert(index < reflectances.size() && withReflectances);
-		reflectances[index] = reflectance;
-	  }
-
-	  bool hasReflectances() const { return withReflectances; }
-	  void addReflectances() {
-		withReflectances = true;
-		resize(getPointCount());
-	  }
-	  void removeReflectances() {
-		withReflectances = false;
-		reflectances.resize(0);
-	  }
-
-	  bool hasColors() const { return withColors; }
-	  void addColors() {
-		withColors = true;
-		resize(getPointCount());
-	  }
-	  void removeColors() {
-		withColors = false;
-		colors.resize(0);
-	  }
-
-	  size_t getPointCount() const { return positions.size(); }
+	 
+	  size_t getPointCount() const { return points.size(); }
 	  void resize(const size_t size) {
-		positions.resize(size);
-		if (hasColors()) {
-		  colors.resize(size);
-		}
-		if (hasReflectances()) {
-		  reflectances.resize(size);
-		}
+		  points.resize(size);
 	  }
 	  void reserve(const size_t size) {
-		positions.reserve(size);
-		if (hasColors()) {
-		  colors.reserve(size);
-		}
-		if (hasReflectances()) {
-		  reflectances.reserve(size);
-		}
+		  points.reserve(size);
 	  }
 	  void clear() {
-		positions.clear();
-		colors.clear();
-		reflectances.clear();
+		  points.clear();
 	  }
 	  size_t addPoint(const PCCPoint3D &position) {
 		const size_t index = getPointCount();
 		resize(index + 1);
-		positions[index] = position;
+		points[index].getPosition() = position;
 		return index;
 	  }
 	  void setPoint(const size_t index, const PCCPoint3D &position) {
 		  const size_t Pindex = getPointCount();
 		  assert(index < Pindex);
-		  positions[index] = position;
+		  points[index].getPosition() = position;
 	  }
 	  PCCPoint3D &getPosition(const size_t index) {
 		  assert(index < positions.size());
-		  return positions[index];
+		  return points[index].getPosition();
 	  }
 	  void swapPoints(const size_t index1, const size_t index2) {
 		assert(index1 < getPointCount());
 		assert(index2 < getPointCount());
-		std::swap((*this)[index1], (*this)[index2]);
-		if (hasColors()) {
-		  std::swap(getColor(index1), getColor(index2));
-		}
-		if (hasReflectances()) {
-		  std::swap(getReflectance(index1), getReflectance(index2));
-		}
-	  }
-	  bool FindPointFromImdex()
-	  {
-		  return true;
+		std::swap(points[index1], points[index2]);
 	  }
 
 	  PCCPoint3D computeCentroid() const {
@@ -287,14 +226,10 @@ namespace pcc {
 		fout << "property float64 x" << std::endl;
 		fout << "property float64 y" << std::endl;
 		fout << "property float64 z" << std::endl;
-		if (hasColors()) {
-		  fout << "property uchar red" << std::endl;
-		  fout << "property uchar green" << std::endl;
-		  fout << "property uchar blue" << std::endl;
-		}
-		if (hasReflectances()) {
-		  fout << "property uint16 refc" << std::endl;
-		}
+		fout << "property uchar red" << std::endl;
+		fout << "property uchar green" << std::endl;
+		fout << "property uchar blue" << std::endl;
+	
 		fout << "element face 0" << std::endl;
 		fout << "property list uint8 int32 vertex_index" << std::endl;
 		fout << "end_header" << std::endl;
@@ -303,14 +238,9 @@ namespace pcc {
 		  for (size_t i = 0; i < pointCount; ++i) {
 			const PCCPoint3D &position = (*this)[i];
 			fout << position.x() << " " << position.y() << " " << position.z();
-			if (hasColors()) {
-			  const PCCColor3B &color = getColor(i);
-			  fout << " " << static_cast<int>(color[0]) << " " << static_cast<int>(color[1]) << " "
-				   << static_cast<int>(color[2]);
-			}
-			if (hasReflectances()) {
-			  fout << " " << static_cast<int>(getReflectance(i));
-			}
+			const PCCColor3B &color = getColor(i);
+			fout << " " << static_cast<int>(color[0]) << " " << static_cast<int>(color[1]) << " "
+				<< static_cast<int>(color[2]);
 			fout << std::endl;
 		  }
 		} else {
@@ -320,14 +250,11 @@ namespace pcc {
 		  for (size_t i = 0; i < pointCount; ++i) {
 			const PCCPoint3D &position = (*this)[i];
 			fout.write(reinterpret_cast<const char *const>(&position), sizeof(double) * 3);
-			if (hasColors()) {
-			  const PCCColor3B &color = getColor(i);
-			  fout.write(reinterpret_cast<const char *>(&color), sizeof(uint16_t) * 3);
-			}
-			if (hasReflectances()) {
-			  const uint16_t &reflectance = getReflectance(i);
-			  fout.write(reinterpret_cast<const char *>(&reflectance), sizeof(uint16_t));
-			}
+			
+			const PCCColor3B &color = getColor(i);
+			fout.write(reinterpret_cast<const char *>(&color), sizeof(uint16_t) * 3);
+			
+
 		  }
 		}
 		fout.close();
@@ -486,9 +413,6 @@ namespace pcc {
 		  std::cout << "Error: missing coordinates!" << std::endl;
 		  return false;
 		}
-		withColors = indexR != PCC_UNDEFINED_INDEX && indexG != PCC_UNDEFINED_INDEX &&
-					 indexB != PCC_UNDEFINED_INDEX;
-		withReflectances = indexReflectance != PCC_UNDEFINED_INDEX;
 		resize(pointCount);
 		if (isAscii) {
 		  size_t pointCounter = 0;
@@ -501,24 +425,21 @@ namespace pcc {
 			if (tokens.size() < attributeCount) {
 			  return false;
 			}
-			auto &position = positions[pointCounter];
+			auto &position = points[pointCounter].getPosition();
 			position[0] = atof(tokens[indexX].c_str());
 			position[1] = atof(tokens[indexY].c_str());
 			position[2] = atof(tokens[indexZ].c_str());
-			if (hasColors()) {
-			  auto &color = colors[pointCounter];
-			  color[0] = atoi(tokens[indexR].c_str());
-			  color[1] = atoi(tokens[indexG].c_str());
-			  color[2] = atoi(tokens[indexB].c_str());
-			}
-			if (hasReflectances()) {
-			  reflectances[pointCounter] = uint16_t(atoi(tokens[indexReflectance].c_str()));
-			}
+			auto &color = points[pointCounter].getColor();
+			color[0] = atoi(tokens[indexR].c_str());
+			color[1] = atoi(tokens[indexG].c_str());
+			color[2] = atoi(tokens[indexB].c_str());
+			
+
 			++pointCounter;
 		  }
 		} else {
 		  for (size_t pointCounter = 0; pointCounter < pointCount && !ifs.eof(); ++pointCounter) {
-			auto &position = positions[pointCounter];
+			auto &position = points[pointCounter].getPosition();
 			for (size_t a = 0; a < attributeCount && !ifs.eof(); ++a) {
 			  const auto &attributeInfo = attributesInfo[a];
 			  if (a == indexX) {
@@ -552,23 +473,14 @@ namespace pcc {
 				  position[2] = z;
 				}
 			  } else if (a == indexR && attributeInfo.byteCount == 1) {
-				auto &color = colors[pointCounter];
+				auto &color = points[pointCounter].getColor();
 				ifs.read(reinterpret_cast<char *>(&color[0]), sizeof(uint8_t));
 			  } else if (a == indexG && attributeInfo.byteCount == 1) {
-				auto &color = colors[pointCounter];
+				auto &color = points[pointCounter].getColor();
 				ifs.read(reinterpret_cast<char *>(&color[1]), sizeof(uint8_t));
 			  } else if (a == indexB && attributeInfo.byteCount == 1) {
-				auto &color = colors[pointCounter];
+				auto &color = points[pointCounter].getColor();
 				ifs.read(reinterpret_cast<char *>(&color[2]), sizeof(uint8_t));
-			  } else if (a == indexReflectance && attributeInfo.byteCount <= 2) {
-				if (indexReflectance == 1) {
-				  uint8_t reflectance;
-				  ifs.read(reinterpret_cast<char *>(&reflectance), sizeof(uint8_t));
-				  reflectances[pointCounter] = reflectance;
-				} else {
-				  auto &reflectance = reflectances[pointCounter];
-				  ifs.read(reinterpret_cast<char *>(reflectance), sizeof(uint16_t));
-				}
 			  } else {
 				char buffer[128];
 				ifs.read(buffer, attributeInfo.byteCount);
@@ -579,7 +491,9 @@ namespace pcc {
 		return true;
 	  }
 	  void convertRGBToYUV() {  // BT709
-		for (auto &color : colors) {
+		for (auto &point : points) {
+
+		  auto& color = point.getColor();
 		  const uint16_t r = color[0];
 		  const uint16_t g = color[1];
 		  const uint16_t b = color[2];
@@ -593,7 +507,8 @@ namespace pcc {
 		}
 	  }
 	  void convertRGBToYUVClosedLoop() {  // BT709
-		for (auto &color : colors) {
+		for (auto &point : points) {
+		  auto& color = point.getColor();
 		  const uint16_t r = color[0];
 		  const uint16_t g = color[1];
 		  const uint16_t b = color[2];
@@ -607,7 +522,8 @@ namespace pcc {
 		}
 	  }
 	  void convertYUVToRGB() {  // BT709
-		for (auto &color : colors) {
+		for (auto &point : points) {
+			auto &color = point.getColor();
 		  const double y1 = color[0];
 		  const double u1 = color[1] - 128.0;
 		  const double v1 = color[2] - 128.0;
@@ -622,7 +538,7 @@ namespace pcc {
 	  
 	  void ConvertColorFrom10bTo8b() //将颜色位深从10bit转换为8bit
 	  {
-		  for (int i = 0; i < colors.size(); i++)
+		  for (int i = 0; i < points.size(); i++)
 		  {
 			  const PCCColor3B &color = getColor(i);
 			  PCCColor3B colorTemp;
@@ -634,7 +550,7 @@ namespace pcc {
 	  }
 	  void ConvertColorFrom8bTo10b() //将颜色位深从10bit转换为8bit
 	  {
-		  for (int i = 0; i < colors.size(); i++)
+		  for (int i = 0; i < points.size(); i++)
 		  {
 			  const PCCColor3B &color = getColor(i);
 			  PCCColor3B colorTemp;
@@ -644,52 +560,12 @@ namespace pcc {
 			  setColor(i, colorTemp);
 		  }
 	  }
-
-	  void Voxelize(uint8_t PointCloudGeometryBitDepth) //点云体素化
-	  {
-
-		  assert(PointCloudGeometryBitDepth <= 16&& !isPositionQuantized);
-		  box3D = computeBoundingBox();
-		  double xSize = box3D.max.x() - box3D.min.x();
-		  double ySize = box3D.max.y() - box3D.min.y();
-		  double zSize = box3D.max.z() - box3D.min.z();
-		  double maxSize = (xSize > ySize ? xSize : ySize) > zSize ? (xSize > ySize ? xSize : ySize) : zSize;
-		  stepSize = maxSize / pow(2, PointCloudGeometryBitDepth);
-
-		  const size_t pointCount = getPointCount();
-		  for (int i = 0; i < pointCount; i++)
-		  {
-			  const PCCPoint3D position = positions[i];
-			  PCCPoint3D positionTemp;
-			  positionTemp[0] = std::floor((position[0] - box3D.min.x()) / stepSize);
-			  positionTemp[1] = std::floor((position[1] - box3D.min.y()) / stepSize);
-			  positionTemp[2] = std::floor((position[2] - box3D.min.z()) / stepSize);
-			  setPosition(i, positionTemp);
-		  }
-		  Unique();
-		  isPositionQuantized = true;
-	  }
-	  void Devoxelize()//点云去体素化
-	  {
-		  assert(isPositionQuantized);
-		  const size_t pointCount = getPointCount();
-		  for (int i = 0; i < pointCount; i++)
-		  {
-			  double X = positions[i].x()*stepSize + box3D.min.x();
-			  double Y = positions[i].y()*stepSize + box3D.min.y();
-			  double Z = positions[i].z()*stepSize + box3D.min.z();
-			  PCCPoint3D position(X, Y, Z);
-			  positions[i] = position;
-		  }
-		  isPositionQuantized = false;
-	  }
 	  size_t addPoints(PCCPointSet3 &pointCloudFrame) //添加点集
 	  {
 		  const size_t m_pointCount = getPointCount();
 		  const size_t pointCount = pointCloudFrame.getPointCount();
 
 		  resize(m_pointCount + pointCount);
-		  if (!hasColors()) addColors();
 		  for (int i = 0; i < pointCount; i++)
 		  {
 			  setPosition(m_pointCount + i, pointCloudFrame.getPosition(i));
@@ -702,7 +578,7 @@ namespace pcc {
 		  const size_t pointCount = getPointCount();
 		  for (int i = 0; i < pointCount; i++)
 		  {
-			  positions[i] = positions[i]+T;
+			  points[i].getPosition() = points[i].getPosition()+T;
 		  }
 	  }
 	  
@@ -753,202 +629,47 @@ namespace pcc {
 			  position = PCCPoint3D(n, m, z);
 		  }
 	  }
-
-	  std::vector<PCCPoint3D> &getPositions() { return positions; }
-	  std::vector<PCCColor3B> &getColors() { return colors; }
-	  bool &getWithColors() { withColors; }
-	  bool &getWithReflectances() { withReflectances; }
-	  bool &getIsPositionQuantized() { isPositionQuantized; }
-	  PCCBox3D &getBox3D() { return box3D; }
-	  double &getStepSize() { return stepSize; }
-	  void setVoxelizationParas(PCCBox3D pbox3D, double pstepSize)
-	  {
-		  isPositionQuantized = true;
-		  box3D = pbox3D;
-		  stepSize = pstepSize;
-	  }
-
-	  void QuickSort(int l, int r) {
-
-		  if (l < r) {
-			  int i = l, j = r;
-			  PCCPoint3D temp = positions[l];
-			  PCCColor3B tempColor = colors[l];
-			  while (i < j) {
-				  while (i < j&&(temp < positions[j]|| temp == positions[j]))
-					  --j;
-				  if (i < j)
-				  {
-					  positions[i++] = positions[j];
-					  colors[i++] = colors[j];
-				  }
-					  
-
-				  while (i<j&&temp>positions[i])
-					  ++i;
-				  if (i < j)
-				  {
-					  positions[j--] = positions[i];
-					  colors[j--] = colors[i];
-				  }
-				 
-			  }
-			  positions[i] = temp;
-			  colors[i] = tempColor;
-
-			  QuickSort(l, i - 1);
-			  QuickSort(i + 1, r);
-		  }
-	  }
-
-	  void InsertSort()
-	  {
-		  std::vector<bool> a(10, true);
-		  for (size_t i = 0; i < positions.size(); i++)
-		  {
-			  if (i / double(positions.size()) >= 0.1&&a[0]) { printf("排序完成10%......\n"); a[0] = false; }
-			  if (i / double(positions.size()) >= 0.2&&a[1]) { printf("排序完成20%......\n"); a[1] = false; }
-			  if (i / double(positions.size()) >= 0.3&&a[2]) { printf("排序完成30%......\n"); a[2] = false; }
-			  if (i / double(positions.size()) >= 0.4&&a[3]) { printf("排序完成40%......\n"); a[3] = false; }
-			  if (i / double(positions.size()) >= 0.5&&a[4]) { printf("排序完成50%......\n"); a[4] = false; }
-			  if (i / double(positions.size()) >= 0.6&&a[5]) { printf("排序完成60%......\n"); a[5] = false; }
-			  if (i / double(positions.size()) >= 0.7&&a[6]) { printf("排序完成70%......\n"); a[6] = false; }
-			  if (i / double(positions.size()) >= 0.8&&a[7]) { printf("排序完成80%......\n"); a[7] = false; }
-			  if (i / double(positions.size()) >= 0.9&&a[8]) { printf("排序完成90%......\n"); a[8] = false; }
-			  if (i / double(positions.size()) >= 0.99&&a[9]) { printf("排序完成100%......\n"); a[9] = false; }
-
-			  size_t min = i;
-			  for (size_t j = i + 1; j < positions.size(); j++)
-			  {
-				  if (positions[j] < positions[min]) min = j;
-			  }
-			  PCCPoint3D temp = positions[i];
-			  positions[i] = positions[min];
-			  positions[min] = positions[i];
-			  if (withColors)
-			  {
-				  PCCColor3B tempColor = colors[i];
-				  colors[i] = colors[min];
-				  colors[min] = tempColor;
-			  }
-			  if (withReflectances)
-			  {
-				  uint16_t tempReflectance = reflectances[i];
-				  reflectances[i] = reflectances[min];
-				  reflectances[min] = tempReflectance;
-			  }
-		  }
-	  }
-
-
-	  void max_heapify(size_t start, size_t end)
-	  {
-		  //建立父节点下标和子节点下标
-		  size_t dad = start;
-
-		  size_t son = dad * 2 + 1;
-
-		  while (son <= end)
-		  {   //若子节点下标在范围内才做比较
-			  if (son + 1 <= end && positions[son] < positions[son + 1]) //先比较两个子节点大小，选择最大的
-			  {
-				  son++;
-
-			  }
-
-			  if (positions[dad] > positions[son]) //如果父节点大于子节点代表调整完毕,直接跳出
-			  {
-				  return;
-			  }
-			  else
-			  {   //否则交换父子节点的值再继续左右子节点值得比较
-				  swapPoints(dad, son);
-				  dad = son;
-				  son = dad * 2 + 1;
-			  }
-
-		  }
-	  }
-
-	  void heap_sort()
-	  {
-		  //初始化，i从最后一个父节点开始调整
-		  for (size_t i = positions.size() / 2 - 1; i >= 0; i--)
-		  {
-			  max_heapify(i, positions.size() - 1);
-
-		  }
-		  printf("创建堆完成......\n");
-
-		  std::vector<bool> a(10, true);
-
-		  for (size_t i = positions.size() - 1; i > 0; i--)
-		  {
-			  swapPoints(0, i);
-
-			  max_heapify(0, i - 1);
-
-			  if (i / double(positions.size()) >= 0.1&&a[0]) { printf("排序完成10%......\n"); a[0] = false; }
-			  if (i / double(positions.size()) >= 0.2&&a[1]) { printf("排序完成20%......\n"); a[1] = false; }
-			  if (i / double(positions.size()) >= 0.3&&a[2]) { printf("排序完成30%......\n"); a[2] = false; }
-			  if (i / double(positions.size()) >= 0.4&&a[3]) { printf("排序完成40%......\n"); a[3] = false; }
-			  if (i / double(positions.size()) >= 0.5&&a[4]) { printf("排序完成50%......\n"); a[4] = false; }
-			  if (i / double(positions.size()) >= 0.6&&a[5]) { printf("排序完成60%......\n"); a[5] = false; }
-			  if (i / double(positions.size()) >= 0.7&&a[6]) { printf("排序完成70%......\n"); a[6] = false; }
-			  if (i / double(positions.size()) >= 0.8&&a[7]) { printf("排序完成80%......\n"); a[7] = false; }
-			  if (i / double(positions.size()) >= 0.9&&a[8]) { printf("排序完成90%......\n"); a[8] = false; }
-			  if (i / double(positions.size()) >= 0.99&&a[9]) { printf("排序完成100%......\n"); a[9] = false; }
-		  }
-	  }
+ 
 	  
 	  void sort()
 	  {
-		  heap_sort();
+		  std::sort(points.begin(), points.end());
 	  }
 	  void RemoveRepeatePoints()
 	  {
 		  size_t i = 0, j = 0, k;
-		  for (k = 1; k < positions.size(); k++)
+		  for (k = 1; k < points.size(); k++)
 		  {
-			  if (positions[k] == positions[j]) continue;
-			  PCCPoint3D tempPosition = positions[j];
+			  if (points[k].getPosition() == points[j].getPosition()) continue;
+			  PCCPoint3D tempPosition = points[j].getPosition();
 			  PCCColor3B tempColor(0, 0, 0);
 			  for (size_t m = j; m < k; m++)
 			  {
-				  tempColor += colors[m];
+				  tempColor += points[m].getColor();
 			  }
 			  tempColor /= (k - j);
-			  positions[i] = tempPosition;
-			  colors[i] = tempColor;
+			  points[i].getPosition() = tempPosition;
+			  points[i].getColor() = tempColor;
 			  i++;
 			  j = k;
 		  }
 
-		  PCCPoint3D tempPosition = positions[j];
+		  PCCPoint3D tempPosition = points[j].getPosition();
 		  PCCColor3B tempColor(0, 0, 0);
 		  for (size_t m = j; m < k; m++)
 		  {
-			  tempColor += colors[m];
+			  tempColor += points[m].getColor();
 		  }
 		  tempColor /= (k - j);
-		  positions[i] = tempPosition;
-		  colors[i] = tempColor;
+		  points[i].getPosition() = tempPosition;
+		  points[i].getColor() = tempColor;
 		  i++;
-	
+
 		  resize(i);
 	  }
 
 	 private:
-	  std::vector<PCCPoint3D> positions;
-	  std::vector<PCCColor3B> colors;
-	  std::vector<uint16_t> reflectances;
-	  bool withColors;
-	  bool withReflectances;
-
-	  bool isPositionQuantized;
-	  PCCBox3D box3D; //点云3D包围盒
-	  double stepSize; //步长
-
+	  std::vector<PCCPoint> points;
 	};
 }
 
